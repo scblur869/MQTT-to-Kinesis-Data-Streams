@@ -35,10 +35,10 @@ import (
 )
 
 const (
-	AccessKeyId     = "AKIA2TMCDDWMFNQHPFF3"
-	SecretAccessKey = "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"
+	AccessKeyId     = ""
+	SecretAccessKey = ""
 	Region          = "us-east-1"
-	RoleARN         = "arn:aws:iam::728806661528:role/gg-access-role"
+	RoleARN         = ""
 	DOCKERLOG       = true
 )
 
