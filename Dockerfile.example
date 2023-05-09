@@ -1,0 +1,25 @@
+FROM golang:alpine AS build-env
+RUN apk --no-cache add build-base gcc
+ADD . /src
+RUN cd /src && go build -o mqtt-to-kinesis
+
+# final stage
+FROM alpine
+WORKDIR /app
+ENV PORT=1883
+ENV WEBSOCKET=8083
+ENV BROKER=broker.emqx.io
+ENV USER=emqx
+ENV PASS=public
+ENV CLIENTID=somesbrokerclientid
+ENV SUBSCRIPTION=topic/test/#
+ENV BACKLOG_COUNT=2000
+ENV KIN_STREAM_NAME=myTestKinesisStream
+ENV KIN_MAXCONN=1
+ENV KIN_PARTITIONKEY=someMeaningfulValue
+ENV AWS_ACCESS_KEY_ID=12344523424
+ENV AWS_SECRET_ACCESS_KEY=23123512351235
+ENV AWS_ASSUME_ROLE_ARN=someARNAssumeRole
+ENV AWS_REGION=us-east-1
+COPY --from=build-env /src/mqtt-to-kinesis /app/
+CMD ["./mqtt-to-kinesis"]
