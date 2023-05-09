@@ -26,20 +26,10 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	producer "github.com/northvolt/kinesis-producer"
 	"github.com/sirupsen/logrus"
-)
-
-const (
-	AccessKeyId     = ""
-	SecretAccessKey = ""
-	Region          = "us-east-1"
-	RoleARN         = ""
-	DOCKERLOG       = true
 )
 
 type AWSKinesis struct {
@@ -52,6 +42,7 @@ type AWSKinesis struct {
 	assumeRoleARN   string
 	MaxConnections  string
 	PartitionKey    string
+	sessionName     string
 }
 
 type MQTTCONFIG struct {
@@ -75,6 +66,7 @@ var (
 		assumeRoleARN:   os.Getenv("AWS_ASSUME_ROLE_ARN"),
 		MaxConnections:  os.Getenv("KIN_MAXCONN"),
 		PartitionKey:    os.Getenv("KIN_PARTITION_KEY"),
+		sessionName:     os.Getenv("KIN_SESSION_NAME"),
 	}
 	mqc = MQTTCONFIG{
 		broker:   os.Getenv("BROKER"),
@@ -85,6 +77,7 @@ var (
 		clientID: os.Getenv("CLIENTID"),
 		qos:      os.Getenv("QOS"),
 	}
+	STDOUT = os.Getenv("STDOUT")
 )
 
 type handler struct {
@@ -97,10 +90,11 @@ func NewHandler() *handler {
 	if err != nil {
 		fmt.Println("err converting string")
 	}
-
-	sess, err := session.NewSession(&aws.Config{
+	sess, err := AssumedRoleV1Session(kin.assumeRoleARN, kin.region)
+	/* sess, err := session.NewSession(&aws.Config{
 		Region: aws.String(kin.region),
 	})
+	*/
 	if err != nil {
 		fmt.Println("Error Getting Credentials:", err)
 
@@ -132,6 +126,10 @@ type Message struct {
 // handle is called when a message is received
 func (k *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 	var m Message
+	STDOUTPUT, err := strconv.ParseBool(STDOUT)
+	if err != nil {
+		fmt.Println("error converting to bool")
+	}
 	if err := json.Unmarshal(msg.Payload(), &m.data); err != nil {
 		fmt.Printf("Message could not be parsed (%s): %s", msg.Payload(), err)
 	}
@@ -143,7 +141,7 @@ func (k *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 		}
 	}
 
-	if DOCKERLOG {
+	if STDOUTPUT {
 		fmt.Printf("received message: %s\n", msg.Payload())
 	}
 }
@@ -153,17 +151,6 @@ func main() {
 	if err != nil {
 		fmt.Println(err) //
 	}
-
-	RoleARN := kin.assumeRoleARN
-	Region := kin.region
-	fmt.Println(Region)
-	fmt.Println(RoleARN)
-
-	// Enable logging by uncommenting the below
-	// mqtt.ERROR = log.New(os.Stdout, "[ERROR] ", 0)
-	// mqtt.CRITICAL = log.New(os.Stdout, "[CRITICAL] ", 0)
-	// mqtt.WARN = log.New(os.Stdout, "[WARN]  ", 0)
-	// mqtt.DEBUG = log.New(os.Stdout, "[DEBUG] ", 0)
 
 	// Create a handler that will deal with incoming messages
 	h := NewHandler()
