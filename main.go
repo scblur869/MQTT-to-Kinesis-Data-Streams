@@ -131,10 +131,11 @@ func (k *handler) Stop() {
 	}
 }
 
-// Message
-type Message struct {
+// Message struct incase i wanted to covert this to something like JSON...etc
+/* type Message struct {
 	data interface{}
 }
+*/
 
 // handle is called when a message is received
 func (k *handler) handle(_ mqtt.Client, msg mqtt.Message) {
@@ -143,6 +144,7 @@ func (k *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 	if err != nil {
 		fmt.Println("error converting to bool")
 	}
+	// I commented this out after testing and realizing its not really needed
 	//	myString := string(msg.Payload()[:])
 	//	fmt.Println(myString)
 	// if err := json.Unmarshal(msg.Payload(), &m.data); err != nil {
@@ -157,7 +159,9 @@ func (k *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 	}
 
 	if STDOUTPUT {
-		fmt.Printf("received message: %s\n", msg.Payload())
+
+		fmt.Printf("key: %s\nvalue: %s\n", msg.Topic(), msg.Payload())
+
 	}
 }
 
@@ -200,8 +204,9 @@ func main() {
 	}
 
 	opts.OnConnect = func(c mqtt.Client) {
-		fmt.Println("connection established")
-		fmt.Println(mqc.topic)
+		fmt.Println("connection established to" + mqc.broker + "on port" + mqc.port)
+		fmt.Println("authenticated as ", mqc.user)
+		fmt.Println("currently subscribing to :", mqc.topic)
 		// Establish the subscription - doing this here means that it will happen every time a connection is established
 		// (useful if opts.CleanSession is TRUE or the broker does not reliably store session data)
 		t := c.Subscribe(mqc.topic, byte(QOSINT), h.handle)
