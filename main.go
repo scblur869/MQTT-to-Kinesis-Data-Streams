@@ -18,7 +18,6 @@ package main
 // Connect to the broker, subscribe, and write messages received to a file
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
@@ -28,6 +27,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/joho/godotenv"
 	producer "github.com/northvolt/kinesis-producer"
 	"github.com/sirupsen/logrus"
 )
@@ -56,6 +56,22 @@ type MQTTCONFIG struct {
 }
 
 var (
+	kin    AWSKinesis
+	mqc    MQTTCONFIG
+	STDOUT string
+)
+
+type handler struct {
+	p *producer.Producer
+}
+
+func init() {
+
+	e := godotenv.Load() //Load .env file
+	if e != nil {
+		fmt.Print(e)
+	}
+
 	kin = AWSKinesis{
 		stream:          os.Getenv("KIN_STREAM_NAME"),
 		region:          os.Getenv("AWS_REGION"),
@@ -68,6 +84,7 @@ var (
 		PartitionKey:    os.Getenv("KIN_PARTITION_KEY"),
 		sessionName:     os.Getenv("KIN_SESSION_NAME"),
 	}
+
 	mqc = MQTTCONFIG{
 		broker:   os.Getenv("BROKER"),
 		port:     os.Getenv("PORT"),
@@ -78,27 +95,23 @@ var (
 		qos:      os.Getenv("QOS"),
 	}
 	STDOUT = os.Getenv("STDOUT")
-)
-
-type handler struct {
-	p *producer.Producer
 }
 
 func NewHandler() *handler {
+
 	mc, err := strconv.Atoi(kin.MaxConnections)
 
 	if err != nil {
 		fmt.Println("err converting string")
 	}
 	sess, err := AssumedRoleV1Session(kin.assumeRoleARN, kin.region)
-	/* sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(kin.region),
-	})
-	*/
 	if err != nil {
-		fmt.Println("Error Getting Credentials:", err)
+		fmt.Println("FAILED Getting Assume Role Credentials:\n", err)
+		os.Exit(0) // we dont want to do anything else if the assume role fails
 
 	}
+
+	// if we have a clean session then lets start producing
 	kcl := kinesis.New(sess)
 	pr := producer.New(&producer.Config{
 		StreamName:     kin.stream,
@@ -125,17 +138,19 @@ type Message struct {
 
 // handle is called when a message is received
 func (k *handler) handle(_ mqtt.Client, msg mqtt.Message) {
-	var m Message
+	//	var m Message
 	STDOUTPUT, err := strconv.ParseBool(STDOUT)
 	if err != nil {
 		fmt.Println("error converting to bool")
 	}
-	if err := json.Unmarshal(msg.Payload(), &m.data); err != nil {
-		fmt.Printf("Message could not be parsed (%s): %s", msg.Payload(), err)
-	}
+	//	myString := string(msg.Payload()[:])
+	//	fmt.Println(myString)
+	// if err := json.Unmarshal(msg.Payload(), &m.data); err != nil {
+	//	fmt.Printf("Message could not be parsed (%s): %s", msg.Payload(), err)
+	//	}
 	if k.p != nil {
 		err := k.p.Put([]byte(msg.Payload()), kin.PartitionKey)
-		fmt.Println(k.p.Verbose)
+		k.p.Verbose = true
 		if err != nil {
 			logrus.WithError(err).Fatal("error producing")
 		}
@@ -186,7 +201,7 @@ func main() {
 
 	opts.OnConnect = func(c mqtt.Client) {
 		fmt.Println("connection established")
-
+		fmt.Println(mqc.topic)
 		// Establish the subscription - doing this here means that it will happen every time a connection is established
 		// (useful if opts.CleanSession is TRUE or the broker does not reliably store session data)
 		t := c.Subscribe(mqc.topic, byte(QOSINT), h.handle)
