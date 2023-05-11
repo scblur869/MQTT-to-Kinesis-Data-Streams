@@ -29,3 +29,44 @@ below is an example of what that file could look like
  AWS_REGION=us-east-1
  STDOUT=true
 ```
+
+typical STDOUT looks like
+
+```console
+key: homeassistant/sensor/eisbar_temperatura_batteria_motore/state
+value: 21.1
+key: homeassistant/sensor/eisbar_uptime_human_readable/state
+value: 42s
+key: homeassistant/sensor/eisbar_uptime_sensor/state
+value: 42
+key: homeassistant/sensor/eisbar_uptime_human_readable/state
+value: 42s
+key: homeassistant/sensor/eisbar_tensione_batteria_servizi/state
+value: 11.98
+key: homeassistant/sensor/eisbar_wifi/state
+value: -48
+key: homeassistant/sensor/eisbar_uptime_human_readable/state
+value: 44s
+key: homeassistant/sensor/eisbar_uptime_sensor/state
+value: 44
+key: homeassistant/sensor/eisbar_tensione_pannelli_solari/state
+value: 1.50
+key: homeassistant/sensor/eisbar_tensione_batteria_motore/state
+value: 1.50
+key: homeassistant/sensor/eisbar_temperatura/state
+value: 21.4
+key: homeassistant/sensor/eisbar_umidit/state
+value: 68.9
+key: homeassistant/sensor/eisbar_uptime_human_readable/state
+value: 46s
+key: homeassistant/sensor/eisbar_uptime_sensor/state
+value: 46
+2023/05/11 07:46:19 flushing records reason=interval,  records=1
+2023/05/11 07:46:19 Result[0] ShardId=shardId-000000000001,  SequenceNumber=49639767612638592089930656974715882307650445660919955474
+```
+
+Kinesis Data Stream view
+![Kinesis Data Steam Data Viewer](Kinesis-Data.png)
+
+And you can use AWS Kinesis Firehose to send this to S3 and transform the format if you like
+![S3](s3.png)
