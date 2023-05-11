@@ -66,7 +66,7 @@ value: 46
 ```
 
 Kinesis Data Stream view
-![Kinesis Data Steam Data Viewer](Kinesis-Data.png)
+![Kinesis Data Steam Data Viewer](img/Kinesis-Data.png)
 
 And you can use AWS Kinesis Firehose to send this to S3 and transform the format if you like
-![S3](s3.png)
+![S3](img/s3.png)
