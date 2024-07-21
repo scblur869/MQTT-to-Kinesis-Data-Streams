@@ -77,3 +77,6 @@ S3 Firehose delivery in Parquet format
 
 Once you have this data in S3, you can use AWS Glue to crawl the data stored in S3, then use Amazon Athena as a SQL workbench to query it...
 ![Athena](img/athena-2.png)
+
+What this architecture might look like
+![Architecture](/img/arch.png)
