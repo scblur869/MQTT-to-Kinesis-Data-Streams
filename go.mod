@@ -1,4 +1,4 @@
-module local/mqtt2kinesis
+module github.com/scblur869/mqttToKds
 
 go 1.20
 

@@ -25,6 +25,8 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/kinesis"
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/joho/godotenv"
@@ -39,7 +41,6 @@ type AWSKinesis struct {
 	accessKeyID     string
 	secretAccessKey string
 	sessionToken    string
-	assumeRoleARN   string
 	MaxConnections  string
 	PartitionKey    string
 	sessionName     string
@@ -79,7 +80,6 @@ func init() {
 		accessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
 		secretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
 		sessionToken:    os.Getenv("AWS_SESSION_TOKEN"),
-		assumeRoleARN:   os.Getenv("AWS_ASSUME_ROLE_ARN"),
 		MaxConnections:  os.Getenv("KIN_MAXCONN"),
 		PartitionKey:    os.Getenv("KIN_PARTITION_KEY"),
 		sessionName:     os.Getenv("KIN_SESSION_NAME"),
@@ -104,11 +104,11 @@ func NewHandler() *handler {
 	if err != nil {
 		fmt.Println("err converting string")
 	}
-	sess, err := AssumedRoleV1Session(kin.assumeRoleARN, kin.region)
-	if err != nil {
-		fmt.Println("FAILED Getting Assume Role Credentials:\n", err)
-		os.Exit(0) // we dont want to do anything else if the assume role fails
 
+	sess, err := session.NewSession(&aws.Config{})
+	if err != nil {
+		fmt.Println("Error creating session ", err)
+		return nil
 	}
 
 	// if we have a clean session then lets start producing
@@ -131,12 +131,6 @@ func (k *handler) Stop() {
 	}
 }
 
-// Message struct incase i wanted to covert this to something like JSON...etc
-/* type Message struct {
-	data interface{}
-}
-*/
-
 // handle is called when a message is received
 func (k *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 	//	var m Message
@@ -144,12 +138,7 @@ func (k *handler) handle(_ mqtt.Client, msg mqtt.Message) {
 	if err != nil {
 		fmt.Println("error converting to bool")
 	}
-	// I commented this out after testing and realizing its not really needed
-	//	myString := string(msg.Payload()[:])
-	//	fmt.Println(myString)
-	// if err := json.Unmarshal(msg.Payload(), &m.data); err != nil {
-	//	fmt.Printf("Message could not be parsed (%s): %s", msg.Payload(), err)
-	//	}
+
 	if k.p != nil {
 		err := k.p.Put([]byte(msg.Payload()), kin.PartitionKey)
 		k.p.Verbose = true
@@ -177,7 +166,7 @@ func main() {
 
 	// Now we establish the connection to the mqtt broker
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker("tcp://" + mqc.broker + ":" + mqc.port)
+	opts.AddBroker(mqc.broker + ":" + mqc.port)
 	opts.SetClientID(mqc.clientID)
 
 	opts.SetOrderMatters(false)       // Allow out of order messages (use this option unless in order delivery is essential)
@@ -185,8 +174,8 @@ func main() {
 	opts.WriteTimeout = time.Second   // Minimal delays on writes
 	opts.KeepAlive = 10               // Keepalive every 10 seconds so we quickly detect network outages
 	opts.PingTimeout = time.Second    // local broker so response should be quick
-	opts.Username = mqc.user
-	opts.Password = mqc.pass
+	opts.Username = ""
+	opts.Password = ""
 	// Automate connection management (will keep trying to connect and will reconnect if network drops)
 	opts.ConnectRetry = true
 	opts.AutoReconnect = true
@@ -204,9 +193,9 @@ func main() {
 	}
 
 	opts.OnConnect = func(c mqtt.Client) {
-		fmt.Println("connection established to" + mqc.broker + "on port" + mqc.port)
+		fmt.Println("connection established to " + mqc.broker + " on port " + mqc.port)
 		fmt.Println("authenticated as ", mqc.user)
-		fmt.Println("currently subscribing to :", mqc.topic)
+		fmt.Println("currently subscribing to : ", mqc.topic)
 		// Establish the subscription - doing this here means that it will happen every time a connection is established
 		// (useful if opts.CleanSession is TRUE or the broker does not reliably store session data)
 		t := c.Subscribe(mqc.topic, byte(QOSINT), h.handle)
@@ -247,5 +236,6 @@ func main() {
 	<-sig
 	fmt.Println("signal caught - exiting")
 	client.Disconnect(1000)
+
 	fmt.Println("shutdown complete")
 }
