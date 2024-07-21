@@ -46,7 +46,7 @@ to send thru the data stream . Just match the Resource property with your KDS St
     ]
 }
 ```
-
+### .env
 it can also be ran from command line using an .env file
 below is an example of what that file could look like
 
@@ -71,6 +71,7 @@ below is an example of what that file could look like
  STDOUT=true
 ```
 
+### Outcomes and Architecture
 
 S3 Firehose delivery in Parquet format
 ![S3 Files ](img/s3.png)
