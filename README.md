@@ -1,11 +1,32 @@
 ## Streaming MQTT data to Kinesis Data Streams
 
-The idea behind this service is to run it as a container by the dozens at the edge on a kubernetes platform. Through parameterization and CICD, easily deploy containers across dozens of mqtt topics and stream those payloads to kinesis data stream(s) --> firehose --> S3 
+### Purpose
+To have a lighweight microservice that connects to a MQTT broker, subscribes to a topic, and streams those payloads to a Amazon Kinesis Data Stream.
 
-I tested this with EMQX and it works great. Tested with 5,000,000 records, this service uses around 15mb of RAM and 1.5% of CPU. Typical GO efficiency.
+### Use Case
+The idea behind this service is to run it as a container by the dozens at the edge, and on a kubernetes platform. Through parameterization and CICD, easily deploy containers subscribing to dozens of mqtt topics and stream those payloads to kinesis data stream(s) --> firehose --> S3 --> Glue --> SQL Workbench (Athena)
 
+### Testing
+Tested this with EMQX and a single topic with 5,000,000 published payloads. This service uses ~15mb of RAM and ~1.5% of CPU. Publishing interval was 0.01/sec
+
+**Payload**:
+```json
+{
+    "name": "device123",
+    "model": "welder",
+    "status": "running",
+    "sensor_1": 24.5,
+    "sensor_2": 98.3,
+    "sensor_3": 16.1,
+    "sensor_4": 0.9,
+    "sensor_5": 5.5,
+    "sensor_6": 100.32
+}
+```
+
+### Security
 Security is simple..
-Using IAM, it needs this iam policy attached to the iam 'service user' in order
+Using IAM, it needs this single iam policy attached to the iam 'service user' in order
 to send thru the data stream . Just match the Resource property with your KDS Stream ARN
 
 ```
