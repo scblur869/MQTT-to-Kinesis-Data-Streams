@@ -1,8 +1,8 @@
 ## Streaming MQTT data to Kinesis Data Streams
 
-The idea behind this service is to run it as a container by the dozens at the edge on a kubernetes platform. Through parameterization and CICD, easily deploy containers across dozens of mqtt topics and stream those payloads to kinesis data stream(s) --> firehose --> datalake
+The idea behind this service is to run it as a container by the dozens at the edge on a kubernetes platform. Through parameterization and CICD, easily deploy containers across dozens of mqtt topics and stream those payloads to kinesis data stream(s) --> firehose --> S3 
 
-I have tested this with EMQX and it works great. In testing with 5,000,000 records, this service uses around 15mb of RAM and 1.5% of CPU. Typical GO efficiency.
+I tested this with EMQX and it works great. Tested with 5,000,000 records, this service uses around 15mb of RAM and 1.5% of CPU. Typical GO efficiency.
 
 Security is simple..
 Using IAM, it needs this iam policy attached to the iam 'service user' in order
@@ -54,5 +54,5 @@ below is an example of what that file could look like
 S3 Firehose delivery in Parquet format
 ![S3 Files ](img/s3.png)
 
-Once you have this data in S3, you can use Glue to crawl the data stored in S3, then use Athena as a SQL workbench to query it...
+Once you have this data in S3, you can use AWS Glue to crawl the data stored in S3, then use Amazon Athena as a SQL workbench to query it...
 ![Athena](img/athena-2.png)
