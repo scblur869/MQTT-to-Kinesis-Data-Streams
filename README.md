@@ -1,15 +1,12 @@
 ## Streaming MQTT data to Kinesis Data Streams
 
-The idea behind  this service is to run it as a container on the edge, subscribe to a topic from MQTT and then batch those payloads up and send them to kinesis data stream --> firehose --> datalake
+The idea behind this service is to run it as a container by the dozens at the edge on a kubernetes platform. Through parameterization and CICD, easily deploy containers across dozens of mqtt topics and stream those payloads to kinesis data stream(s) --> firehose --> datalake
 
-I have tested this with various free mqtt brokers and it seems to work pretty well. In testing for 5,000,000 records, this service uses around 15mb of RAM and 1.5% of CPU. Typical GO efficiency.
+I have tested this with EMQX and it works great. In testing with 5,000,000 records, this service uses around 15mb of RAM and 1.5% of CPU. Typical GO efficiency.
 
-this service written in Go is deployed via a container using parameterization.
-see the Dockerfile
-This container is light and efficient enough to deploy 100's of these subcribing to MQTT topics across the entire shop-floor for collecting machine data (one example use case)
-  
-from a iam access perspective, it needs this iam policy attached to the iam user in order
-to send thru the data stream
+Security is simple..
+Using IAM, it needs this iam policy attached to the iam 'service user' in order
+to send thru the data stream . Just match the Resource property with your KDS Stream ARN
 
 ```
 {
@@ -54,7 +51,7 @@ below is an example of what that file could look like
 ```
 
 
-S3 Firehose Delivery in Parquet format
+S3 Firehose delivery in Parquet format
 ![S3 Files ](img/s3.png)
 
 Once you have this data in S3, you can use a Glue crawler to craw the data, and then use Athena as a SQL workbench to query it...
