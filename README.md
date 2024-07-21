@@ -54,5 +54,5 @@ below is an example of what that file could look like
 S3 Firehose delivery in Parquet format
 ![S3 Files ](img/s3.png)
 
-Once you have this data in S3, you can use a Glue crawler to craw the data, and then use Athena as a SQL workbench to query it...
+Once you have this data in S3, you can use Glue to crawl the data stored in S3, then use Athena as a SQL workbench to query it...
 ![Athena](img/athena-2.png)
