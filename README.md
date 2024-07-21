@@ -7,7 +7,7 @@ To have a lighweight microservice that connects to a MQTT broker, subscribes to 
 The idea behind this service is to run it as a container by the dozens at the edge, and on a kubernetes platform. Through parameterization and CICD, easily deploy containers subscribing to dozens of mqtt topics and stream those payloads to kinesis data stream(s) --> firehose --> S3 --> Glue --> SQL Workbench (Athena)
 
 ### Testing
-Tested with EMQX (local container) and a single topic with 5,000,000 published payloads. This service uses ~15mb of RAM and ~1.5% of CPU. Publishing interval was 0.01/sec
+Tested with EMQX (local container) and a single topic with 5,000,000 published payloads. This service used ~15mb of RAM and ~1.5% of CPU. Publishing interval was 0.01/sec.
 
 **Payload**:
 ```json
