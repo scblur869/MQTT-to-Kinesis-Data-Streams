@@ -1,4 +1,4 @@
-## mqtt-to-kinesis
+## Streaming MQTT data to Kinesis Data Streams
 
 The idea behind  this service is to run it as a container on the edge, subscribe to a topic from MQTT and then batch those payloads up and send them to kinesis data stream --> firehose --> datalake
 
@@ -53,43 +53,9 @@ below is an example of what that file could look like
  STDOUT=true
 ```
 
-typical STDOUT looks like
 
-```console
-key: homeassistant/sensor/eisbar_temperatura_batteria_motore/state
-value: 21.1
-key: homeassistant/sensor/eisbar_uptime_human_readable/state
-value: 42s
-key: homeassistant/sensor/eisbar_uptime_sensor/state
-value: 42
-key: homeassistant/sensor/eisbar_uptime_human_readable/state
-value: 42s
-key: homeassistant/sensor/eisbar_tensione_batteria_servizi/state
-value: 11.98
-key: homeassistant/sensor/eisbar_wifi/state
-value: -48
-key: homeassistant/sensor/eisbar_uptime_human_readable/state
-value: 44s
-key: homeassistant/sensor/eisbar_uptime_sensor/state
-value: 44
-key: homeassistant/sensor/eisbar_tensione_pannelli_solari/state
-value: 1.50
-key: homeassistant/sensor/eisbar_tensione_batteria_motore/state
-value: 1.50
-key: homeassistant/sensor/eisbar_temperatura/state
-value: 21.4
-key: homeassistant/sensor/eisbar_umidit/state
-value: 68.9
-key: homeassistant/sensor/eisbar_uptime_human_readable/state
-value: 46s
-key: homeassistant/sensor/eisbar_uptime_sensor/state
-value: 46
-2023/05/11 07:46:19 flushing records reason=interval,  records=1
-2023/05/11 07:46:19 Result[0] ShardId=shardId-000000000001,  SequenceNumber=49639767612638592089930656974715882307650445660919955474
-```
+S3 Firehose Delivery in Parquet format
+![S3 Files ](img/s3.png)
 
-Kinesis Data Stream view
-![Kinesis Data Steam Data Viewer](img/Kinesis-Data.png)
-
-And you can use AWS Kinesis Firehose to send this to S3 and transform the format if you like
-![S3](img/s3.png)
+Once you have this data in S3, you can use a Glue crawler to craw the data, and then use Athena as a SQL workbench to query it...
+![Athena](img/athena-2.png)
