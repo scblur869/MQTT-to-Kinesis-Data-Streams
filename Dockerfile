@@ -4,8 +4,10 @@ RUN apk --no-cache add build-base gcc git ca-certificates
 ENV GOPROXY=direct
 ADD . /src
 WORKDIR /src
-RUN go build -o /mqtt_to_kinesis
-
+# prod build with size reduction
+RUN go build -ldflags "-s -w" -o /mqtt_to_kinesis
+# non-prob build with debugger and symbols
+# RUN go build -o /mqtt_to_kinesis
 # final stage
 FROM alpine
 WORKDIR /app
